@@ -72,17 +72,34 @@ class Gmusic:
         urllib2.install_opener(opener)
         self.playerkey = 'ecb5abdc586962a6521ffb54d9d731a0'
         self.host = 'http://www.google.cn'
-        self.starturl = self.host + '/music/chartlisting?q=chinese_new_songs_cn&cat=song'
+        self.starturl = self.host + '/music/chartlisting?q=chinese_new_songs_cn&cat=song' # 排行榜 starurl
+        self.starturl2 = self.host + '/music/topiclistingdir?cat=song&start=%s'# 专题
 
     def start(self):
-        phblist = self.getPhbList()
+        while True:
+            print "1\t排行榜\n2\t专题"
+            playtype = raw_input('Your choice[1-2]:')
+
+            if playtype == '':
+                playtype = 1
+                break
+            if int(playtype) != 0 and int(playtype) <= 2:
+                break
+
+        if int(playtype) == 1:
+            ''' 排行榜 '''
+            phblist = self.getPhbList()
+        elif int(playtype) == 2:
+            ''' 专题'''
+            phblist = self.getZtList()
+            
         i = 1
         for l in phblist:
             print "%2d  %s" % (i,l[0])
             i = i + 1
-               
+            
         while True:
-            listid = raw_input('Input your choice[1-%s]: ' % len(phblist) )
+            listid = raw_input('Your choice[1-%s]: ' % len(phblist) )
             if listid == '':
                 listid = 0
                 break
@@ -91,15 +108,29 @@ class Gmusic:
                 break
             
         while True:
-            limit = raw_input('Input music num limit[50]: ')
+            limit = raw_input('Music num limit[25]: ')
             if limit == "":
-                limit = 50
+                limit = 25
                 break
             if int(limit) != 0:
                 limit = int(limit)
                 break
-        print "Your choise is: %s, %2d" % ( phblist[listid][0], limit)
+        print "We will play %s limit %2d songs in list ..." % ( phblist[listid][0], limit)
         self.play(phblist[listid][1], limit)
+ 
+    def getZtList(self):
+        print "Get zhuanti list now ..."
+        ztlist = []
+        for page in range(0,57,14):
+            ''' 一页是 14 个，共 5 页 '''
+            resp = urllib2.urlopen(self.starturl2 % page)
+            soup = BeautifulSoup("".join(resp.read()), fromEncoding="UTF-8")
+            soup = soup.findAll('a', attrs={'class': 'topic_title'})
+            for a in soup:
+                title = unescape(a.string)
+                url = self.host + str(a.attrs[1][1])
+                ztlist.append([title, url])
+        return ztlist
         
     def play(self,url, limit):
         self.hardlimit = int(limit)
@@ -138,6 +169,7 @@ class Gmusic:
                         tplay.stopplay()
                     elif sc == 'q' or sc == 'Q':
                         tplay.stopplay()
+                        f.write('\n')
                         log.seek(0)
                         log.truncate()
                         log.close()
@@ -203,7 +235,7 @@ class Gmusic:
         soup = soup.find('table', attrs={'id': 'song_list'})
         songlist = []
         for tr in soup:
-            if len(tr) == 21:
+            if len(tr) == 21 or len(tr) == 22:
                 id = tr.contents[1].input.attrs[2][1]
                 rank = int(tr.contents[3].contents[0].strip('.'))
                 name = tr.contents[5].a.contents[0]
