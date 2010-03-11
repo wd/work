@@ -586,12 +586,13 @@ available."
                               (mapconcat
                                (lambda (p) p)
                                cats ", "))))
-		    (list "Tags" 	;tags support
-                          (let ((cats (cdr (assoc "mt_keywords"  entry))))
-                            (when (> (length cats) 0)
-                              (mapconcat
-                               (lambda (p) p)
-                               cats ", "))))
+            (list "Tags" (cdr (assoc "mt_keywords" entry)))
+;		    (list "Tags" 	;tags support
+;                          (let ((tags (cdr (assoc "mt_keywords"  entry))))
+;                            (when (> (length tags) 0)
+;                              (mapconcat
+;                               (lambda (p) p)
+;                               tags ", "))))
 		    (list "From"
 			  (or (cdr (assoc "authorName"  entry))
 			      weblogger-server-username))
@@ -1039,7 +1040,8 @@ Otherwise, open a new entry."
   ;(message-goto-keywords)   ;; Create Keywords field in new entries
   (message-goto-Categories)
   (message-goto-Tags)
-  (message-goto-Permlink)
+  (if (not (and entry (cdr (assoc "url" entry))))
+      (message-goto-Permlink))
   (if (message-fetch-field "Subject")
       (message-goto-body)   ;; If Subject exists, move cursor to message body
     (message-goto-subject)) ;; Else, drop cursor on Subject header
