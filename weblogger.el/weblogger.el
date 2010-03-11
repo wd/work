@@ -586,7 +586,14 @@ available."
                               (mapconcat
                                (lambda (p) p)
                                cats ", "))))
-            (list "Tags" (cdr (assoc "mt_keywords" entry)))
+            (list "Tags" (let ((tags (cdr (assoc "mt_keywords" entry))))
+                           (if (and (> (length tags) 0) (not (stringp tags)))
+                             (mapconcat
+                               (lambda(p) p)
+                               tags
+                               ", ")
+                             tags
+                             )))
 ;		    (list "Tags" 	;tags support
 ;                          (let ((tags (cdr (assoc "mt_keywords"  entry))))
 ;                            (when (> (length tags) 0)
