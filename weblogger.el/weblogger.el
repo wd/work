@@ -565,7 +565,10 @@ available."
 				    (weblogger-weblog-id)
 				    (url-host (url-generic-parse-url weblogger-server-url)))))
 		    (list "Date"
-			  (cdr (assoc "dateCreated" entry)))
+			  (let ((date (cdr (assoc "dateCreated" entry))))
+                (if (stringp date)
+                  (fix-datetime-decrease-8-hour date)
+                  nil)))
 		    (list "In-Reply-To"
 			  (let ((hold nil))
 			    (mapcar
@@ -1297,5 +1300,36 @@ internally).  If BUFFER is not given, use the current buffer."
   "Move point to the categories header."
   (interactive)
   (message-position-on-field "Categories" "Subject"))
+
+(defun fix-datetime-decrease-8-hour ( date )
+  (print date)
+  (cond
+   ((string-match
+     "\\([0-9]\\{4\\}\\)\\([0-9][0-9]\\)\\([0-9][0-9]\\)T\\([0-9]+\\):\\([0-9]+\\):\\([0-9]+\\)" date)
+    (setq year 1 month 2 day 3 hour 4 min 5 sec 6))
+   )
+  (when year
+    (setq year 1 month 2 day 3 hour 4 min 5 sec 6)
+    (setq year
+          (match-string year date))
+    (setq month
+          (match-string month date))
+    (setq day
+          (match-string day date))
+    (setq hour
+          (number-to-string
+           (+
+            (string-to-number (match-string hour date))
+            -8)))
+    (setq min
+          (match-string min date))
+    (setq sec
+          (match-string sec date))
+    (setq date-int
+          (mapcar 'string-to-number
+                  (list sec min hour day month year)))
+    (format-time-string "%Y%m%dT%H:%M:%S" (apply 'encode-time date-int))
+    )
+  )
 
 (provide 'weblogger)
