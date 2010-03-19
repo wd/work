@@ -145,7 +145,7 @@ sub main() {
 
 	my $conf = YAML::LoadFile($c);
 	my $sel = &select( @$conf );
-	&error("Nothing found.") if not $sel;
+	&error("Nothing found in conf file.") if not $sel;
 
 	print "You select: " . $sel->{'name'} . " type: " . $sel->{'type'} . "\n";
 

@@ -114,6 +114,7 @@ class Gmusic:
                 break
             if int(limit) != 0:
                 limit = int(limit)
+                
                 break
         print "We will play %s limit %2d songs in list ..." % ( phblist[listid][0], limit)
         self.play(phblist[listid][1], limit)

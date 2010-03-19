@@ -565,10 +565,11 @@ available."
 				    (weblogger-weblog-id)
 				    (url-host (url-generic-parse-url weblogger-server-url)))))
 		    (list "Date"
-			  (let ((date (cdr (assoc "dateCreated" entry))))
-                (if (stringp date)
-                  (fix-datetime-decrease-8-hour date)
-                  nil)))
+                  (cdr (assoc "dateCreated" entry)))
+;			  (let ((date (cdr (assoc "dateCreated" entry))))
+;                (if (stringp date)
+;                  (fix-datetime-decrease-8-hour date)
+;                  nil)))
 		    (list "In-Reply-To"
 			  (let ((hold nil))
 			    (mapcar
@@ -1147,7 +1148,8 @@ like."
 	 (assoc "title"        entry)
 	 (assoc "authorName"   entry)
 	 (assoc "userid"       entry)
-	 (assoc "dateCreated"  entry)
+	 ;(assoc "dateCreated"  entry)
+	 (assoc "date_created_gmt"  entry)
 	 (cons "mt_tb_ping_urls"   (cdr (assoc "trackbacks"  entry)))
 	 (cons "mt_convert_breaks" (weblogger-texttype-id-from-name
 				    (cdr (assoc "texttype"    entry))))
@@ -1226,7 +1228,8 @@ internally).  If BUFFER is not given, use the current buffer."
     (delq nil 
 	  (list
 	   (cons "authorName"   (message-fetch-field "From"))
-	   (cons "dateCreated"  (message-fetch-field "Date"))
+	   ;(cons "dateCreated"  (message-fetch-field "Date"))
+	   (cons "date_created_gmt"  (message-fetch-field "Date"))
 	   (cons "texttype"      (message-fetch-field "X-TextType"))
 	   (cons "url"           (message-fetch-field "X-Url"))
 	   (cons "wp_slug"           (message-fetch-field "Permlink"))
@@ -1301,8 +1304,8 @@ internally).  If BUFFER is not given, use the current buffer."
   (interactive)
   (message-position-on-field "Categories" "Subject"))
 
+;; this function not use now, leave it may be we will use this some time
 (defun fix-datetime-decrease-8-hour ( date )
-  (print date)
   (cond
    ((string-match
      "\\([0-9]\\{4\\}\\)\\([0-9][0-9]\\)\\([0-9][0-9]\\)T\\([0-9]+\\):\\([0-9]+\\):\\([0-9]+\\)" date)
