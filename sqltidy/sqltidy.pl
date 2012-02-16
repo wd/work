@@ -9,8 +9,10 @@ BEGIN {
 }
 
 use SQL::Beautify;
+#use SQL::Tidy;
 
 my $sql = new SQL::Beautify;
+#my $sql = new SQL::Tidy;
 
 my @a = <STDIN>;
 

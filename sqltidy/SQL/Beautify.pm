@@ -55,27 +55,39 @@ sub beautify {
 	$self->{_new_line} = 1;
 
 	my $last;
+    my @func_stack;
 
 	$self->{_tokens} = [ SQL::Tokenizer->tokenize($self->query, 1) ];
 
 	while(defined(my $token = $self->_token)) {
 		if($token eq '(') {
-			$self->_add_token($token);
-			$self->_new_line;
+			$self->_add_token($token, $last);
+            if ( $last && $self->_is_keyword($last) ) {
+    			$self->_new_line;
+            } else {
+                # add this to trim space before a function
+                $self->{_output} = substr( $self->{_output}, 0, -2) . "(";
+                # add this to comfirm if it is in a function
+                push @func_stack, $last;
+            }
 			push @{$self->{_level_stack}}, $self->{_level};
 			$self->_over unless $last and uc($last) eq 'WHERE';
 		}
 
 		elsif($token eq ')') {
-			$self->_new_line;
+            if ( ! shift @func_stack ) {
+                $self->_new_line;
+            }
 			$self->{_level} = pop(@{$self->{_level_stack}}) || 0;
 			$self->_add_token($token);
-			$self->_new_line;
+            #$self->_new_line;
 		}
 
 		elsif($token eq ',') {
 			$self->_add_token($token);
-			$self->_new_line;
+            if ( ! @func_stack ) {
+    			$self->_new_line;
+            }
 		}
 
 		elsif($token eq ';') {
@@ -121,7 +133,7 @@ sub beautify {
 		}
 
 		elsif($token =~ /^(?:JOIN)$/i) {
-			if($last and $last !~ /^(?:LEFT|RIGHT|INNER|OUTER|CROSS)$/) {
+			if($last and $last !~ /^(?:LEFT|RIGHT|INNER|OUTER|CROSS)$/i) {
 				$self->_new_line;
 			}
 
@@ -132,6 +144,12 @@ sub beautify {
 			$self->_new_line;
 			$self->_add_token($token);
 			$self->_new_line;
+		}
+
+		elsif($token =~ /^(?:ON)$/i) {
+            $self->_back;
+			$self->_new_line;
+			$self->_add_token($token);
 		}
 
 		else {
@@ -242,7 +260,7 @@ sub _is_keyword {
 	my @KEYWORD = qw(
 		SELECT WHERE FROM HAVING GROUP BY UNION INTERSECT EXCEPT LEFT RIGHT
 		INNER OUTER CROXX JOIN AND OR VARCHAR INTEGER BIGINT TEXT IS NULL NOT
-		BETWEEN EXTRACT EPOCH INTERVAL IF LIMIT AS
+		BETWEEN EXTRACT EPOCH INTERVAL IF LIMIT AS ON
 	);
 
 	return ~~ grep { $_ eq uc($token) } @KEYWORD;
