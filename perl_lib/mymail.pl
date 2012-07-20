@@ -8,6 +8,7 @@ use Carp;
 use File::Basename;
 use MIME::Lite;
 use MIME::Types;
+use MIME::Base64;
 
 sub usage {
     print <<EOF;
@@ -45,10 +46,12 @@ sub main {
     #     Type    =>'multipart/related'
     #);
 
+    $title = "=?UTF-8?B?" . encode_base64($title || 'A test msg', "") . "?=";
+
     my $msg = MIME::Lite->new(
         To => $to || &usage,
         From => $from || 'searcher@qunar.com',
-        Subject => $title || 'A test msg',
+        Subject => $title,
         Type => 'multipart/related',
     );
 
