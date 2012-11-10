@@ -55,15 +55,19 @@ sub beautify {
 	$self->{_new_line} = 1;
 
 	my $last;
+    my $last_keyword;
     my @func_stack;
 
 	$self->{_tokens} = [ SQL::Tokenizer->tokenize($self->query, 1) ];
 
 	while(defined(my $token = $self->_token)) {
 		if($token eq '(') {
+
+            $self->_new_line if ( $last && uc($last) eq 'SELECT' );
+
 			$self->_add_token($token, $last);
             if ( $last && $self->_is_keyword($last) ) {
-    			$self->_new_line;
+    			$self->_new_line if ( uc($last_keyword) ne 'SELECT' );
             } else {
                 # add this to trim space before a function
                 $self->{_output} = substr( $self->{_output}, 0, -2) . "(";
@@ -76,8 +80,9 @@ sub beautify {
 
 		elsif($token eq ')') {
             if ( ! shift @func_stack ) {
-                $self->_new_line;
+    			$self->_new_line if ( uc($last_keyword) ne 'SELECT' );
             }
+
 			$self->{_level} = pop(@{$self->{_level_stack}}) || 0;
 			$self->_add_token($token);
             #$self->_new_line;
@@ -143,13 +148,15 @@ sub beautify {
 		elsif($token =~ /^(?:AND|OR)$/i) {
 			$self->_new_line;
 			$self->_add_token($token);
-			$self->_new_line;
+            #$self->_new_line;
 		}
 
 		elsif($token =~ /^(?:ON)$/i) {
             $self->_back;
 			$self->_new_line;
 			$self->_add_token($token);
+			$self->_new_line;
+			$self->_over;
 		}
 
 		else {
@@ -157,6 +164,7 @@ sub beautify {
 		}
 
 		$last = $token;
+        $last_keyword = $token if ( $self->_is_keyword($token) );
 	}
 
 	$self->_new_line;
@@ -260,7 +268,7 @@ sub _is_keyword {
 	my @KEYWORD = qw(
 		SELECT WHERE FROM HAVING GROUP BY UNION INTERSECT EXCEPT LEFT RIGHT
 		INNER OUTER CROXX JOIN AND OR VARCHAR INTEGER BIGINT TEXT IS NULL NOT
-		BETWEEN EXTRACT EPOCH INTERVAL IF LIMIT AS ON
+		BETWEEN EXTRACT EPOCH INTERVAL LIMIT AS ON
 	);
 
 	return ~~ grep { $_ eq uc($token) } @KEYWORD;

@@ -9,10 +9,11 @@ BEGIN {
 }
 
 use SQL::Beautify;
-#use SQL::Tidy;
 
 my $sql = new SQL::Beautify;
-#my $sql = new SQL::Tidy;
+
+binmode STDIN, ':utf8';
+binmode STDOUT, ':utf8';
 
 my @a = <STDIN>;
 
