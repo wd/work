@@ -159,6 +159,10 @@ sub beautify {
 			$self->_over;
 		}
 
+		elsif($token =~ /^(?:::[a-zA-Z]+)$/) {
+			$self->_stick_to_last_token($token);
+		}
+
 		else {
 			$self->_add_token($token, $last);
 		}
@@ -242,6 +246,13 @@ sub _new_line {
 
 	$self->{_output} .= $self->{break} unless($self->{_new_line});
 	$self->{_new_line} = 1;
+}
+
+# Go back a word
+sub _stick_to_last_token {
+	my ($self, $token) = @_;
+
+	$self->{_output} .= $token;
 }
 
 
